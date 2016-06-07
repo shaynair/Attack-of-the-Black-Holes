@@ -64,7 +64,7 @@
 
 #pause{
  margin-top: 8px;
- margin-left: 80px;
+ margin-left: 100px;
  height: 25px;
  width: 75px;
  font-family:Arial, Helvetica, sans-serif;
@@ -89,6 +89,7 @@
 
 #time_alert{
  position: relative;
+ visibility: hidden;
  width: 250px;
  height: 300px;
  margin-left:auto;
@@ -100,5 +101,92 @@
  box-shadow: 5px 5px 10px 1px grey;
 }
 
+#time_alert h1{
+ padding-left:10px;
+ width: 70%;
+ font-family:Arial, Helvetica, sans-serif;
+ font-weight: bold;
+ font-size: 30px;
+ color: red;
+ margin-left: auto;
+ margin-right: auto;
+}
+
+#time_finish{
+ width: 70%;
+ margin-left: 35px;
+ height: 60px;
+ width: 180px;
+ font-family:Arial, Helvetica, sans-serif;
+ font-size: 20px;
+ border-radius: 5px; 
+ border: 2px solid purple;
+ color: purple;
+}
+
+#time_finish:hover{
+ cursor: pointer;
+ background: purple;
+ color:white;
+}
+
+#time_new_game:hover{
+ cursor: pointer;
+ background: purple;
+ color:white;
+}
+
+#time_new_game{
+ width: 70%;
+ margin-top: 30px;
+ margin-left: 35px;
+ height: 60px;
+ width: 180px;
+ font-family:Arial, Helvetica, sans-serif;
+ font-size: 20px;
+ border-radius: 5px; 
+ border: 2px solid purple;
+ color: purple;
+}
 
 
+#pause_alert{
+ position: relative;
+ visibility: hidden;
+ width: 250px;
+ height: 200px;
+ margin-left:auto;
+ margin-right:auto;
+ margin-top: -250px;
+ background: #dedede;
+ border: 1px solid black;
+ border-radius: 5px; 
+ box-shadow: 5px 5px 10px 1px grey;
+}
+
+#pause_alert h1{
+ width: 90%;
+ font-family:Arial, Helvetica, sans-serif;
+ font-weight: bold;
+ font-size: 28px;
+ color: red;
+ margin-left: auto;
+ margin-right: auto;
+}
+
+#resume{
+ width: 80%;
+ margin-left: 25px;
+ height: 60px;
+ font-family:Arial, Helvetica, sans-serif;
+ font-size: 20px;
+ border-radius: 5px; 
+ border: 2px solid purple;
+ color: purple;
+}
+
+#resume:hover{
+ cursor: pointer;
+ background: purple;
+ color:white;
+}

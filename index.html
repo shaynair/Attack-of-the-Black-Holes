@@ -1,26 +1,46 @@
-<header>
-  <link rel="stylesheet" type="text/css" href="index.css">
-</header>
+<!DOCTYPE html>
+<html>
+<title></title> 
+
+<link rel="stylesheet" type="text/css" href="index.css">
+
+<script type="text/javascript" src="game.js">
+</script>
+
 <body>
+
  <section id="frame">
    <section id="infobar">
-   
      <section id="level-sec">
-	   <p>Level:<span id="level">sample</span></p>
+	   <p>Level:<span id="level"></span></p>
 	 </section>
 	 <section id="score-sec">
-	   <p>Score:<span id="score">sample</span></p> 
+	   <p>Score:<span id="score"></span></p> 
 	 </section>
 	 <section id="time-sec">
 	   <button id="pause">Pause</button>
-	   <p><span id="time">Sample </span>Seconds</p>
+	   <p><span id="time"></span> Seconds</p>
 	 </section>
 	
    </section> 
    
-   <section id="time_alert"></section>
+   <section id="time_alert">
+     <section>   
+      <h1>Game Over</h1>
+   	 </section> 
+	 <button id="time_finish">Finish</button></br>
+ 	 <button id="time_new_game">New Game</button>
+   </section>
+   
+   <section id="pause_alert">
+     <section>   
+      <h1>Game Is Paused</h1>
+   	 </section> 
+	 <button id="resume">Resume The Game</button></br>
+   </section>
    
    <canvas id="game">
    </canvas> 
   </section>
 </body>
+</html>
