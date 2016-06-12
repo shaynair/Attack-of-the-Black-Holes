@@ -1,46 +1,63 @@
 <!DOCTYPE html>
 <html>
-<title></title> 
+	<head>
+		<!-- Responsive Design Tags -->
+		<meta charset="utf-8" />
+		<meta http-equiv="x-ua-compatible" content="ie=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+		
+		<!-- Deprecated, but still here for assignment purposes. Copyright information. -->
+		<meta name="author" content="Akshay Nair, Hossein Fazeli" />
+		<meta name="Copyright" content="Akshay Nair, Hossein Fazeli" />
 
-<link rel="stylesheet" type="text/css" href="index.css">
+		<!-- Title of the page -->
+        <title>Space Wars</title>
+		
+		<!-- Assets, CSS, JS -->
+        <link rel="stylesheet" href="assets/css/style.css" />
+		
+		<!--[if lt IE 9]>
+			 <script defer src="assets/js/jquery-1.12.4.min.js"></script>
+		<![endif]-->
 
-<script type="text/javascript" src="game.js">
-</script>
-
-<body>
-
- <section id="frame">
-   <section id="infobar">
-     <section id="level-sec">
-	   <p>Level:<span id="level"></span></p>
-	 </section>
-	 <section id="score-sec">
-	   <p>Score:<span id="score"></span></p> 
-	 </section>
-	 <section id="time-sec">
-	   <button id="pause">Pause</button>
-	   <p><span id="time"></span> Seconds</p>
-	 </section>
-	
-   </section> 
-   
-   <section id="time_alert">
-     <section>   
-      <h1>Game Over</h1>
-   	 </section> 
-	 <button id="time_finish">Finish</button></br>
- 	 <button id="time_new_game">New Game</button>
-   </section>
-   
-   <section id="pause_alert">
-     <section>   
-      <h1>Game Is Paused</h1>
-   	 </section> 
-	 <button id="resume">Resume The Game</button></br>
-   </section>
-   
-   <canvas id="game">
-   </canvas> 
-  </section>
-</body>
+		<!--[if gte IE 9]><!-->
+			 <script defer src="assets/js/jquery-2.2.4.min.js"></script>
+		<!--<![endif]-->
+		<script defer src="assets/js/game.js"></script>
+	</head>
+	<body>
+		<section id="frame">
+			<div id="infobar">
+				<div id="level-sec">
+					<p>Level:<span id="level"></span></p>
+				</div>
+				<div id="score-sec">
+					<p>Score:<span id="score"></span></p> 
+				</div>
+				<div id="time-sec">
+					<button id="pause">Pause</button>
+					<p><span id="time"></span> Seconds</p>
+				</div>
+			</div>
+			
+			<div id="time_alert">
+				<div>   
+					<h1>Game Over</h1>
+				</div> 
+				<button id="time_finish">Finish</button>
+				<button id="time_new_game">New Game</button>
+			</div>
+	   
+			<div id="pause_alert">
+				<div>   
+					<h1>Game Is Paused</h1>
+				</div> 
+				<button id="resume">Resume The Game</button>
+			</div> 
+	   
+			<canvas id="game" width="1000px" height="649px">
+			</canvas> 
+	  </section>
+	 
+	</body>
 </html>
