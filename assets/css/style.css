@@ -122,6 +122,7 @@ button:hover{
 
 #timer {
 	display: inline-block;
+	width: 8em;
 }
 
 #score-change {
