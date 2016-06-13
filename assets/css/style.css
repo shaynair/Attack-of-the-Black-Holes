@@ -120,8 +120,14 @@ button:hover{
 	display: none;
 }
 
+#timer {
+	display: inline-block;
+}
+
 #score-change {
 	visibility: hidden;
+	display: inline-block;
+	width: 2.5em;
 }
 
 header, footer {

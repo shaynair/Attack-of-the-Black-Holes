@@ -4,8 +4,8 @@
 const FPS = 60; // Frames per second
 const OBJ_WIDTH = 50;
 const OBJ_HEIGHT = 50;
-const HOLE_MARGIN_WIDTH = 100; // Event Horizon width
-const HOLE_MARGIN_HEIGHT = 100; // Event Horizon height
+const HOLE_MARGIN_WIDTH = 50; // Event Horizon half width
+const HOLE_MARGIN_HEIGHT = 50; // Event Horizon half height
 const HOLE_CLICK_WIDTH = 25; // Click Horizon width
 const HOLE_CLICK_HEIGHT = 25; // Click Horizon height
 const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
@@ -20,7 +20,8 @@ const MAX_LEVELS = 2;
 
 // Game Data
 const objects = [];
-const canvas = $("#game")[0]; // convert jQuery object to DOM
+const $canvas = $("#game");
+const canvas = $canvas[0]; // convert jQuery object to DOM
 const context = canvas.getContext("2d");
 let time;
 let paused;
@@ -83,18 +84,22 @@ function initialize() {
 	});
 	
 	// Main click handler.
-	$("#game").on("click", (event) => {
-		console.log(event.clientX + ", " + event.clientY);
-		let hole = getOverlap(event.clientX, event.clientY, HOLE_CLICK_WIDTH, HOLE_CLICK_HEIGHT);
+	$("#game").on("click", (e) => {
+		if (paused || time <= 0) {
+			return;
+		}
+		let x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft - $canvas.offset().left;
+		let y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop - $canvas.offset().top;
+		
+		let hole = getOverlap(x, y, HOLE_CLICK_WIDTH, HOLE_CLICK_HEIGHT);
 		if (hole != null) {
-			console.log("HIT " + hole.x + ", " + hole.y);
 			// Remove the hole and give points
 			hole.alive = false;
 			updateScore(score + hole.type.points);
 			
 			let $change = $("#score-change");
 			$change.text("+" + hole.type.points);
-			fadeInline($change, 100, 1000);
+			fadeInline($change, 100, 2000);
 			// --------------------------TODO---------------------------------
 			// Play a sound or animation here.
 		}
@@ -107,6 +112,7 @@ function initialize() {
 function start() {
 	paused = false;
 	updateScore(START_SCORE);
+	updateTime(START_TIME);
 	updateLevel(1);
 	
 	setTimer();
@@ -117,8 +123,10 @@ function start() {
 function updateLevel(l) {
 	level = l;
 	$("#level").html(level);
-	
-	time = START_TIME;
+}
+
+function updateTime(t) {
+	time = t;
 	$("#time").html(time);
 }
 
@@ -129,21 +137,22 @@ function updateScore(s) {
 
 // Keeps an inline object in space calculations for fading.
 function fadeInline($object, inTime, outTime, inFirst = true) {
+	$object.stop();
 	if (inFirst) {
 		$object.fadeIn(inTime, () => {
 			$object.css("visibility", "visible")
-					.css("display", "inline")
+					.css("display", "inline-block")
 					.fadeOut(outTime, () => {
-						$object.css("display", "inline")
+						$object.css("display", "inline-block")
 								.css("visibility", "hidden");
 					});
-		});
+			});
 	} else {
 		$object.fadeOut(inTime, () => {
 			$object.css("visibility", "hidden")
-					.css("display", "inline")
+					.css("display", "inline-block")
 					.fadeIn(outTime, () => {
-						$object.css("display", "inline")
+						$object.css("display", "inline-block")
 								.css("visibility", "visible");
 					});
 		});
@@ -160,13 +169,12 @@ function restart(){
 }
 
 // Executes every second. Creates new black holes.
-function showTime(){
+function showTime() {
 	if (!paused) {
 		if (time <= 0) {
 			$("#time-alert").fadeIn(300);	
 		} else {
-			time--; 
-			$("#time").html(time);	  
+			updateTime(time - 1);
 			HOLE_TYPE.forEach((type) => {
 				if (Math.random() < type.chance * level) {
 					createHole(type);
@@ -182,22 +190,20 @@ function setTimer() {
 }
 
 // Creates a new black hole at a random location
-function createHole(type){
+function createHole(type) {
 	let x;
 	let y;
 	   
 	do {
-		x = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN_WIDTH)) + OBJ_WIDTH;
-		y = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN_HEIGHT + OBJ_HEIGHT))) + (OBJ_HEIGHT * 2);
-	} while (getOverlap(x, y) != null);
-	
-	console.log("Created at " + x + ", " + y);
+		x = Math.floor(Math.random() * (GAME_WIDTH - (2 * HOLE_MARGIN_WIDTH))) + HOLE_MARGIN_WIDTH;
+		y = Math.floor(Math.random() * (GAME_HEIGHT - (2 * HOLE_MARGIN_HEIGHT))) + HOLE_MARGIN_HEIGHT;
+	} while (getOverlap(x, y) != null); // check if overlaps with some black hole's event horizon
 		
 	objects.push(new BlackHole(x, y, type));
 }
 
-// Checks if this (x,y) overlaps with some black hole's event horizon.
-function getOverlap(x, y, margin_x = HOLE_MARGIN_WIDTH, margin_y = HOLE_MARGIN_HEIGHT){
+// Checks if this (x,y) overlaps with some rectangle.
+function getOverlap(x, y, margin_x = HOLE_MARGIN_WIDTH * 2, margin_y = HOLE_MARGIN_HEIGHT * 2) {
 	var ret = null;
 	objects.every((hole) => {
 		if (hole.isBlackHole() && hole.alive && x >= hole.x - margin_x 
@@ -210,7 +216,7 @@ function getOverlap(x, y, margin_x = HOLE_MARGIN_WIDTH, margin_y = HOLE_MARGIN_H
 }
 
 function animate(){
-    if(!paused && time > 0){
+    if(!paused && time > 0) {
 		context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
 		
 		objects.forEach((obj, index) => {
@@ -250,6 +256,7 @@ class SpaceObject {
 		context.save();
 		context.globalAlpha = this.opacity;
 		context.translate(this.x, this.y);
+		
 		context.rotate(this.angle * Math.PI / 180);
 		
 		this.innerDraw(context);
@@ -280,7 +287,7 @@ class BlackHole extends SpaceObject {
 	innerDraw (context) {
 		context.drawImage(this.img, -(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
 		
-		this.angle++;
+		this.angle = (this.angle + 1) % 180;
 	}
 }
 
