@@ -2,10 +2,12 @@
 
 // Constants
 const FPS = 60; // Frames per second
-const HOLE_WIDTH = 50;
-const HOLE_HEIGHT = 50;
+const OBJ_WIDTH = 50;
+const OBJ_HEIGHT = 50;
 const HOLE_MARGIN_WIDTH = 100; // Event Horizon width
 const HOLE_MARGIN_HEIGHT = 100; // Event Horizon height
+const HOLE_CLICK_WIDTH = 25; // Click Horizon width
+const HOLE_CLICK_HEIGHT = 25; // Click Horizon height
 const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					{name: "purple", capacity: 2, points: 10, chance: 1/10},
 					{name: "blue", capacity: 3, points: 5, chance: 1/5}];
@@ -17,18 +19,18 @@ const START_SCORE = 200;
 const MAX_LEVELS = 2;
 
 // Game Data
-const holes = [];
+const objects = [];
 const canvas = $("#game")[0]; // convert jQuery object to DOM
 const context = canvas.getContext("2d");
 let time;
 let paused;
 let score;
 let level;
+let ticks = 0;
 
 // Animations
 let timer_control;
 let animate_control;
-let rotate = 0; // Angle of rotating black holes
 
 
 /* TODO:
@@ -44,13 +46,11 @@ let rotate = 0; // Angle of rotating black holes
 			- 50 points should subtract whenever it does
 			- should disappear when type.capacity is reached
 			- game over when score reaches 0
-		2. Should be clickable (within 25px of x,y)
-			- should disappear
-			- should give points based off of type.points
-		
+
 	- Objects:
 		1. 10 objects should randomly assort themselves (CANVAS)
-			spacecraft, planets, asteroids, nebulae, stars, moons, space junk
+			spacecraft, planets, asteroids, nebulae, stars, 
+			moons, space junk, UFO
 		2. Should move, bounces upon hitting the edge
 		3. Should be clickable and give points
 		
@@ -76,9 +76,28 @@ function initialize() {
 	$("#resume").on("click", () => {
 		paused = false;
 		$("#pause-alert").fadeOut(300);
-	});		
+	});
+	
 	$("#instructions-open").on("click", () => {
 		$("#instructions").slideToggle();
+	});
+	
+	// Main click handler.
+	$("#game").on("click", (event) => {
+		console.log(event.clientX + ", " + event.clientY);
+		let hole = getOverlap(event.clientX, event.clientY, HOLE_CLICK_WIDTH, HOLE_CLICK_HEIGHT);
+		if (hole != null) {
+			console.log("HIT " + hole.x + ", " + hole.y);
+			// Remove the hole and give points
+			hole.alive = false;
+			updateScore(score + hole.type.points);
+			
+			let $change = $("#score-change");
+			$change.text("+" + hole.type.points);
+			fadeInline($change, 100, 1000);
+			// --------------------------TODO---------------------------------
+			// Play a sound or animation here.
+		}
 	});
 	
 	start();
@@ -108,12 +127,34 @@ function updateScore(s) {
 	$("#score").html(score);
 }
 
+// Keeps an inline object in space calculations for fading.
+function fadeInline($object, inTime, outTime, inFirst = true) {
+	if (inFirst) {
+		$object.fadeIn(inTime, () => {
+			$object.css("visibility", "visible")
+					.css("display", "inline")
+					.fadeOut(outTime, () => {
+						$object.css("display", "inline")
+								.css("visibility", "hidden");
+					});
+		});
+	} else {
+		$object.fadeOut(inTime, () => {
+			$object.css("visibility", "hidden")
+					.css("display", "inline")
+					.fadeIn(outTime, () => {
+						$object.css("display", "inline")
+								.css("visibility", "visible");
+					});
+		});
+	}
+}
+
 // Resets the current game and starts a new one.
 function restart(){
-	holes.splice(0, holes.length);
+	objects.splice(0, objects.length);
 	clearTimeout(timer_control);
 	clearTimeout(animate_control);
-	$("#timer").fadeIn(200); // reset animation
 	
 	start();
 }
@@ -146,25 +187,24 @@ function createHole(type){
 	let y;
 	   
 	do {
-		x = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN_WIDTH)) + HOLE_WIDTH;
-		y = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN_HEIGHT + HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
+		x = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN_WIDTH)) + OBJ_WIDTH;
+		y = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN_HEIGHT + OBJ_HEIGHT))) + (OBJ_HEIGHT * 2);
 	} while (getOverlap(x, y) != null);
+	
+	console.log("Created at " + x + ", " + y);
 		
-	let holeObj = {type, opacity: 0, filled: 0, x, y};
-	holeObj.img = new Image();
-	holeObj.img.src = 'assets/images/' + holeObj.type.name + '-hole.svg'; 
-	holes.push(holeObj);
+	objects.push(new BlackHole(x, y, type));
 }
 
 // Checks if this (x,y) overlaps with some black hole's event horizon.
-function getOverlap(x,y){
+function getOverlap(x, y, margin_x = HOLE_MARGIN_WIDTH, margin_y = HOLE_MARGIN_HEIGHT){
 	var ret = null;
-	holes.every((hole) => {
-		if (x >= hole.x - HOLE_MARGIN_WIDTH && x <= hole.x + HOLE_MARGIN_WIDTH 
-				&& y >= hole.y - HOLE_MARGIN_HEIGHT && y <= hole.y + HOLE_MARGIN_HEIGHT) {
+	objects.every((hole) => {
+		if (hole.isBlackHole() && hole.alive && x >= hole.x - margin_x 
+				&& x <= hole.x + margin_x && y >= hole.y - margin_y && y <= hole.y + margin_y) {
 			ret = hole; // overlaps; we return the hole that overlapped
 		} 
-		return ret; // break if overlap
+		return ret == null; // break if overlap
 	});
 	return ret;
 }
@@ -173,39 +213,74 @@ function animate(){
     if(!paused && time > 0){
 		context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
 		
-		holes.forEach((hole) => {
-			context.save();
-			context.globalAlpha = hole.opacity;
-			context.translate(hole.x, hole.y);
-			context.rotate(rotate * Math.PI / 180);
+		objects.forEach((obj, index) => {
+			obj.draw(context);
 			
-			context.drawImage(hole.img, -(HOLE_WIDTH / 2), -(HOLE_HEIGHT / 2), HOLE_WIDTH, HOLE_HEIGHT);
-			context.restore();
-			
-			if (hole.opacity < 1) {
-				hole.opacity += (2 / FPS); // Fade In 0.5 sec
+			if (!obj.alive && obj.opacity <= 0) {
+				objects.splice(index, 1);
 			}
         });
 		
-		if (time < 10) {
-			$("#timer").fadeToggle(200);
+		// Flicker time when low
+		if (time < 10 && (ticks % (FPS / 3)) == 0) {
+			fadeInline($("#timer"), 160, 160, false);
 		}
-		
-		rotate++;
     }
+	ticks++;
     animate_control = setTimeout(animate, 1000 / FPS);
 }
 
 class SpaceObject {
-	constructor (x, y) {
+	constructor (x, y, rotate = 0, velocity = 0, angle = 0) {
 		this.x = x;
 		this.y = y;
+		this.opacity = 0;
+		this.alive = true;
+		this.angle = angle; // 2D angle
+		this.velocity = velocity;
+		this.rotate = rotate; // angular momentum
 	}
 	
-	get x () { return this.x; }
-	get y () { return this.y; }
+	isBlackHole() { return false; }
 	
-	draw () {
+	// To be overridden
+	innerDraw (context) { }
+	
+	draw (context) {
+		context.save();
+		context.globalAlpha = this.opacity;
+		context.translate(this.x, this.y);
+		context.rotate(this.angle * Math.PI / 180);
+		
+		this.innerDraw(context);
+		
+		context.restore();
+		
+		if (this.alive && this.opacity < 1) {
+			this.opacity += (2 / FPS); // Fade In 0.5 sec
+		} else if (!this.alive && this.opacity > 0) {
+			this.opacity -= (2 / FPS); // Fade Out 0.5 sec
+		}
+	}
+}
+
+class BlackHole extends SpaceObject {
+	
+	constructor (x, y, type) {
+		super(x, y);
+		this.filled = 0;
+		this.type = type;
+		
+		this.img = new Image();
+		this.img.src = 'assets/images/' + type.name + '-hole.svg'; 
+	}
+	
+	isBlackHole() { return true; }
+	
+	innerDraw (context) {
+		context.drawImage(this.img, -(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
+		
+		this.angle++;
 	}
 }
 

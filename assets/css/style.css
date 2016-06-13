@@ -120,6 +120,10 @@ button:hover{
 	display: none;
 }
 
+#score-change {
+	visibility: hidden;
+}
+
 header, footer {
 	text-align: center;
 	margin: 0 auto;
