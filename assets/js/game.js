@@ -3,10 +3,13 @@
 // Constants
 const HOLE_WIDTH = 50;
 const HOLE_HEIGHT = 50;
-const HOLE_MARGIN = 100;
+const HOLE_MARGIN_WIDTH = 100; // Event Horizon width
+const HOLE_MARGIN_HEIGHT = 100; // Event Horizon height
 const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					{name: "purple", capacity: 2, points: 10, chance: 1/10},
 					{name: "blue", capacity: 3, points: 5, chance: 1/5}];
+					// name = svg file name, chance = chance of spawning per second
+					
 const GAME_WIDTH = $("#game").width();
 const GAME_HEIGHT = $("#game").height();
 const MAX_LEVELS = 2;
@@ -38,18 +41,20 @@ let rotate = 0;
 			- 50 points should subtract whenever it does
 			- should disappear when type.capacity is reached
 			- game over when score reaches 0
-		2. Should be clickable and should disappear
+		2. Should be clickable (within 25px of x,y)
+			- should disappear
+			- should give points based off of type.points
 		
 	- Objects:
 		1. 10 objects should randomly assort themselves (CANVAS)
-			spacecraft, planets, asteroids, nebulae, stars
-		2. Should move
-			- bounces upon hitting the edge
+			spacecraft, planets, asteroids, nebulae, stars, moons, space junk
+		2. Should move, bounces upon hitting the edge
+		3. Should be clickable and give points
 		
 */
 
 function initialize() {
-	$("#time-new-game").on("click", function(){
+	$("#time-new-game").on("click", () => {
 		$("#time-alert").fadeOut(500);
 		clearTimeout(timer_control);
 		clearTimeout(animate_control);
@@ -57,12 +62,12 @@ function initialize() {
 		start();
 	});
 	  
-	$("#pause").on("click", function() {
+	$("#pause").on("click", () => {
 		paused = true;
 		$("#pause-alert").fadeIn(500);
 	});
 																	
-	$("#resume").on("click", function() {
+	$("#resume").on("click", () => {
 		paused = false;
 		$("#pause-alert").fadeOut(500);
 	});		
@@ -104,7 +109,7 @@ function showTime(){
 		} else {
 			$("#time").html(time);	  
 			time--; 
-			HOLE_TYPE.forEach(function(type) {
+			HOLE_TYPE.forEach((type) => {
 				if (Math.random() < type.chance * level) {
 					createHole(type);
 				}
@@ -118,21 +123,21 @@ function showTimeOver(){
     $("#time-alert").fadeIn(500);
 }
  
-function createHole(holeType){
+function createHole(type){
     if (!paused) {
-		let x_r;
-		let y_r;
+		let x;
+		let y;
 	   
 		do {
-			x_r = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN)) + HOLE_WIDTH;
-			y_r = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN + HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
-		} while (!checkOverlap(x_r, y_r));
+			x = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN_WIDTH)) + HOLE_WIDTH;
+			y = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN_HEIGHT + HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
+		} while (!checkOverlap(x, y));
 		
-		let holeObj = {type: holeType,
+		let holeObj = {type,
 						opacity: 0,
 						filled: 0,
-						x: x_r,
-						y: y_r};
+						x,
+						y};
 		holeObj.img = new Image();
 		holeObj.img.src = 'assets/images/' + holeObj.type.name + '-hole.svg'; 
 		holes.push(holeObj);
@@ -141,8 +146,9 @@ function createHole(holeType){
 
 function checkOverlap(x,y){
 	var ret = true; // does not overlap
-	holes.every(function(hole) {
-		if (x >= hole.x - HOLE_MARGIN && x <= hole.x + HOLE_MARGIN && y >= hole.y - HOLE_MARGIN && y <= hole.y + HOLE_MARGIN) {
+	holes.every((hole) => {
+		if (x >= hole.x - HOLE_MARGIN_WIDTH && x <= hole.x + HOLE_MARGIN_WIDTH 
+				&& y >= hole.y - HOLE_MARGIN_HEIGHT && y <= hole.y + HOLE_MARGIN_HEIGHT) {
 			ret = false; // overlaps
 		} 
 		return ret; // break if overlap
@@ -154,7 +160,7 @@ function animate(){
     if(!paused && time > 0){
 		context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
 		
-		holes.forEach(function(hole) {
+		holes.forEach((hole) => {
 			context.save();
 			context.globalAlpha = hole.opacity;
 			context.translate(hole.x, hole.y);
@@ -177,7 +183,7 @@ function animate(){
     animate_control = setTimeout(animate, 1000 / 60);
 }
 
-$(document).ready(function() {
+$(document).ready(() => {
 	initialize();
 });
 
