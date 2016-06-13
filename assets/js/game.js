@@ -1,33 +1,58 @@
 "use strict";
 
+// Constants
 const HOLE_WIDTH = 50;
 const HOLE_HEIGHT = 50;
-const HOLE_MARGIN = 1.5; // Scale factor relative to width/height
+const HOLE_MARGIN = 100;
+const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
+					{name: "purple", capacity: 2, points: 10, chance: 1/10},
+					{name: "blue", capacity: 3, points: 5, chance: 1/5}];
 const GAME_WIDTH = $("#game").width();
 const GAME_HEIGHT = $("#game").height();
+const MAX_LEVELS = 2;
 
-let time; // to keep track of times
-let timer_control;
-let paused = false; // to check if the timer is puased or not
-let score;  //to keep the current score
-let level;  // to keep the current level
+// Game Data
 const holes = [];
 const context = $("#game")[0].getContext("2d");
+let time;
+let paused;
+let score;
+let level;
 
 // Animations
+let timer_control;
+let animate_control;
 let rotate = 0;
 
-function start(){
-	time = 60; 
-	score = 200;
-	paused = 0;
-	level = 1;
-	$("#level").html(level);
-	$("#score").html(score);
+
+/* TODO:
+	- Start Screen:
+		1. High scores should be saved and displayed (HTML5 Local Storage)
+			(Title, High Score, Start button)
 	
+	- Levels:
+		1. When time runs out, display a transitional screen
+
+	- Black Holes:
+		1. Should eat objects (within HOLE_MARGIN)
+			- 50 points should subtract whenever it does
+			- should disappear when type.capacity is reached
+			- game over when score reaches 0
+		2. Should be clickable and should disappear
+		
+	- Objects:
+		1. 10 objects should randomly assort themselves (CANVAS)
+			spacecraft, planets, asteroids, nebulae, stars
+		2. Should move
+			- bounces upon hitting the edge
+		
+*/
+
+function initialize() {
 	$("#time-new-game").on("click", function(){
 		$("#time-alert").fadeOut(500);
 		clearTimeout(timer_control);
+		clearTimeout(animate_control);
 		reset();
 		start();
 	});
@@ -40,9 +65,30 @@ function start(){
 	$("#resume").on("click", function() {
 		paused = false;
 		$("#pause-alert").fadeOut(500);
-	});														
+	});		
+	
+	start();
+}
+
+function start() {
+	time = 60; 
+	paused = false;
+	updateScore(200);
+	updateLevel(1);
+	
 	showTime();
 	animate();
+}
+
+
+function updateLevel(l) {
+	level = l;
+	$("#level").html(level);
+}
+
+function updateScore(s) {
+	score = s;
+	$("#score").html(score);
 }
 
 function reset(){
@@ -53,22 +99,16 @@ function reset(){
 
 function showTime(){
 	if (!paused) {
-		if (time < 0) {
+		if (time <= 0) {
 			showTimeOver();  	
 		} else {
 			$("#time").html(time);	  
 			time--; 
-			if (level == 1 && time > 0) {
-				if ((time % 4) == 0) {
-					createHole("blue");
+			HOLE_TYPE.forEach(function(type) {
+				if (Math.random() < type.chance * level) {
+					createHole(type);
 				}
-				if ((time % 7) == 0) {
-					createHole("purple");
-				}
-				if ((time % 15) == 0) {
-					createHole("black");
-				}
-			}
+			});
 		}
 	}
 	timer_control = setTimeout(showTime, 1000);
@@ -84,15 +124,17 @@ function createHole(holeType){
 		let y_r;
 	   
 		do {
-			x_r = Math.floor(Math.random() * (GAME_WIDTH - (HOLE_MARGIN * HOLE_WIDTH))) + HOLE_WIDTH;
-			y_r = Math.floor(Math.random() * (GAME_HEIGHT - ((HOLE_MARGIN + 1) * HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
+			x_r = Math.floor(Math.random() * (GAME_WIDTH - HOLE_MARGIN)) + HOLE_WIDTH;
+			y_r = Math.floor(Math.random() * (GAME_HEIGHT - (HOLE_MARGIN + HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
 		} while (!checkOverlap(x_r, y_r));
 		
 		let holeObj = {type: holeType,
+						opacity: 0,
+						filled: 0,
 						x: x_r,
 						y: y_r};
 		holeObj.img = new Image();
-		holeObj.img.src = 'assets/images/' + holeObj.type + '-hole.svg'; 
+		holeObj.img.src = 'assets/images/' + holeObj.type.name + '-hole.svg'; 
 		holes.push(holeObj);
     }  
 }
@@ -100,8 +142,7 @@ function createHole(holeType){
 function checkOverlap(x,y){
 	var ret = true; // does not overlap
 	holes.every(function(hole) {
-		if (x >= hole.x - (HOLE_WIDTH * HOLE_MARGIN) && x <= hole.x + (HOLE_WIDTH * HOLE_MARGIN) 
-					&& y >= hole.y - (HOLE_HEIGHT * HOLE_MARGIN) && y <= hole.y + (HOLE_HEIGHT * HOLE_MARGIN)) {
+		if (x >= hole.x - HOLE_MARGIN && x <= hole.x + HOLE_MARGIN && y >= hole.y - HOLE_MARGIN && y <= hole.y + HOLE_MARGIN) {
 			ret = false; // overlaps
 		} 
 		return ret; // break if overlap
@@ -115,11 +156,16 @@ function animate(){
 		
 		holes.forEach(function(hole) {
 			context.save();
+			context.globalAlpha = hole.opacity;
 			context.translate(hole.x, hole.y);
 			context.rotate(rotate * Math.PI / 180);
 			
 			context.drawImage(hole.img, -(HOLE_WIDTH / 2), -(HOLE_HEIGHT / 2), HOLE_WIDTH, HOLE_HEIGHT);
 			context.restore();
+			
+			if (hole.opacity < 1) {
+				hole.opacity += (1 / 30); // Fade In 30 frames
+			}
         });
 		
 		if (time < 10) {
@@ -128,10 +174,10 @@ function animate(){
 		
 		rotate++;
     }
-    setTimeout(animate, 1000 / 60);
+    animate_control = setTimeout(animate, 1000 / 60);
 }
 
 $(document).ready(function() {
-	start();
+	initialize();
 });
 
