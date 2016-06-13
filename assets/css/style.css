@@ -87,9 +87,9 @@
  margin-top: 10px;
 }
 
-#time_alert{
+#time-alert{
  position: absolute;
- visibility: hidden;
+ display: none;
  width: 250px;
  height: 300px;
  margin-left: 390px;
@@ -100,7 +100,7 @@
  box-shadow: 5px 5px 10px 1px grey;
 }
 
-#time_alert h1{
+#time-alert h1{
  padding-left:10px;
  width: 70%;
  font-family:Arial, Helvetica, sans-serif;
@@ -111,7 +111,7 @@
  margin-right: auto;
 }
 
-#time_finish{
+#time-finish{
  width: 70%;
  margin-left: 35px;
  height: 60px;
@@ -123,19 +123,19 @@
  color: purple;
 }
 
-#time_finish:hover{
+#time-finish:hover{
  cursor: pointer;
  background: purple;
  color:white;
 }
 
-#time_new_game:hover{
+#time-new-game:hover{
  cursor: pointer;
  background: purple;
  color:white;
 }
 
-#time_new_game{
+#time-new-game{
  width: 70%;
  margin-top: 30px;
  margin-left: 35px;
@@ -149,9 +149,9 @@
 }
 
 
-#pause_alert{
+#pause-alert{
  position: absolute;
- visibility: hidden;
+ display: none;
  width: 250px;
  height: 200px;
  margin-left: 390px;
@@ -162,7 +162,7 @@
  box-shadow: 5px 5px 10px 1px grey;
 }
 
-#pause_alert h1{
+#pause-alert h1{
  width: 90%;
  font-family:Arial, Helvetica, sans-serif;
  font-weight: bold;
@@ -188,6 +188,3 @@
  background: purple;
  color:white;
 }
-
-
-#game{}
