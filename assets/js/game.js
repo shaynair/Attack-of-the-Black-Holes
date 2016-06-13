@@ -1,125 +1,137 @@
-var time_remained; // to keep track of times
-var timer_control;
-var blackhole_control;
-var is_paused; // to check if the timer is puased or not
-var score;  //to keep the current score
-var level;  // to keep the current level
-var holes = [];
-var context;
+"use strict";
+
+const HOLE_WIDTH = 50;
+const HOLE_HEIGHT = 50;
+const HOLE_MARGIN = 1.5; // Scale factor relative to width/height
+const GAME_WIDTH = $("#game").width();
+const GAME_HEIGHT = $("#game").height();
+
+let time; // to keep track of times
+let timer_control;
+let paused = false; // to check if the timer is puased or not
+let score;  //to keep the current score
+let level;  // to keep the current level
+const holes = [];
+const context = $("#game")[0].getContext("2d");
+
+// Animations
+let rotate = 0;
 
 function start(){
-  time_remained = 60; 
-  score = 200;
-  is_paused = 0;
-  level = 1;
-  document.getElementById("level").innerHTML = level;
-  document.getElementById("score").innerHTML = score;
-  context = document.getElementById("game").getContext("2d");
-  document.getElementById("time_new_game").addEventListener("click",function(){
-                                                                		document.getElementById("time_alert").style.visibility = "hidden";
-																		clearTimeout(timer_control);
-																		reset();
-	             													    start();
-														                });
-  
-  document.getElementById("pause").addEventListener("click",function(){
-                                                                is_paused = 1 ;
-        														document.getElementById("pause_alert").style.visibility = "visible";
-		                                                        });
-  																
-  document.getElementById("resume").addEventListener("click",function(){
-                                                                is_paused = 0 ;
-        														document.getElementById("pause_alert").style.visibility = "hidden";
-		                                                        });																
-  show_time();
-  animate();
+	time = 60; 
+	score = 200;
+	paused = 0;
+	level = 1;
+	$("#level").html(level);
+	$("#score").html(score);
+	
+	$("#time-new-game").on("click", function(){
+		$("#time-alert").fadeOut(500);
+		clearTimeout(timer_control);
+		reset();
+		start();
+	});
+	  
+	$("#pause").on("click", function() {
+		paused = true;
+		$("#pause-alert").fadeIn(500);
+	});
+																	
+	$("#resume").on("click", function() {
+		paused = false;
+		$("#pause-alert").fadeOut(500);
+	});														
+	showTime();
+	animate();
 }
 
 function reset(){
-  context.clearRect(0,0,document.getElementById("game").width,document.getElementById("game").height); 
-  holes.splice(0,holes.length);
-  
+	holes.splice(0, holes.length);
+	
+	$("#timer").fadeIn(250); // reset animation
 }
 
-function show_time(){
-  if( time_remained < 0 && is_paused == 0) {
-    show_timeover_alert();  	
-  }else{
-    if( is_paused == 0 ){
-	    document.getElementById("time").innerHTML=  time_remained;	  
-	    time_remained = time_remained - 1; 
-	   
-	    if (level == 1 ){
-	        if ( time_remained  > 0 &&(time_remained%4) == 0 ){
-	             create_hole("blue");
-            }
-	        if ( time_remained  > 0 && (time_remained%7) == 0 ){
-	             create_hole("purple");
-            }
-	        if ( time_remained  > 0 && (time_remained%15) == 0 ){
-	             create_hole("black");
-            }
-		 }	
-	 }  
-  }
-   timer_control = setTimeout(show_time,1000);
+function showTime(){
+	if (!paused) {
+		if (time < 0) {
+			showTimeOver();  	
+		} else {
+			$("#time").html(time);	  
+			time--; 
+			if (level == 1 && time > 0) {
+				if ((time % 4) == 0) {
+					createHole("blue");
+				}
+				if ((time % 7) == 0) {
+					createHole("purple");
+				}
+				if ((time % 15) == 0) {
+					createHole("black");
+				}
+			}
+		}
+	}
+	timer_control = setTimeout(showTime, 1000);
 }
 
-function show_timeover_alert(){
-     document.getElementById("time_alert").style.visibility="visible";
+function showTimeOver(){
+    $("#time-alert").fadeIn(500);
 }
-
-function add_blackhole(holeObj){
-   /*alert(holeObj); */
-   var img = new Image();
-   img.onload = function() {
-           context.drawImage(img,holeObj.x-25,holeObj.y-25,50,50);
-   };
-   
-   if ( holeObj.type == "black" ) {
-      img.src = 'assets/images/black-hole.svg'; 
-   }else if ( holeObj.type == "blue" ) {
-      img.src = "assets/images/blue-hole.svg"; 
-   }else if ( holeObj.type == "purple" ) {
-      img.src = "assets/images/purple-hole.svg"; 
-   }
-   
- }
  
-function create_hole(holeType){
-    if( is_paused == 0 ){
-	   var x_r = Math.floor(Math.random()*900)+50;
-       var y_r = Math.floor(Math.random()*540)+50;
+function createHole(holeType){
+    if (!paused) {
+		let x_r;
+		let y_r;
 	   
-	   while( checkOverlap(x_r-50,y_r-50) == 0 ){
-          x_r = Math.floor(Math.random()*900)+50;
-          y_r = Math.floor(Math.random()*540)+50;
-	   }
-	   var newhole = {type:holeType,cap:"3",x:x_r,y:y_r};
-       holes.push(newhole);   
+		do {
+			x_r = Math.floor(Math.random() * (GAME_WIDTH - (HOLE_MARGIN * HOLE_WIDTH))) + HOLE_WIDTH;
+			y_r = Math.floor(Math.random() * (GAME_HEIGHT - ((HOLE_MARGIN + 1) * HOLE_HEIGHT))) + (HOLE_HEIGHT * 2);
+		} while (!checkOverlap(x_r, y_r));
+		
+		let holeObj = {type: holeType,
+						x: x_r,
+						y: y_r};
+		holeObj.img = new Image();
+		holeObj.img.src = 'assets/images/' + holeObj.type + '-hole.svg'; 
+		holes.push(holeObj);
     }  
 }
 
 function checkOverlap(x,y){
-   for( i = 0; i < holes.length; i++){
-      if( ( x >= holes[i].x-50 && x <= holes[i].x+50 ) && ( y >= holes[i].y-50 && y <= holes[i].y+50 ) 
-	                 || ( x+100 >= holes[i].x-50 && x+100 <= holes[i].x+50 ) && ( y >= holes[i].y-50 && y <= holes[i].y+50 )
-					     || ( x >= holes[i].x-50 && x <= holes[i].x+50 ) && ( y+100 >= holes[i].y-50 && y+100 <= holes[i].y+50 )
-						    || ( x+100 >= holes[i].x-50 && x+100 <= holes[i].x+50 ) && ( y+100 >= holes[i].y-50 && y+100 <= holes[i].y+50 ) ) {
-	      return 0; // overlaps
-	  } 
-   } 
-   return 1; // does not overlap
+	var ret = true; // does not overlap
+	holes.every(function(hole) {
+		if (x >= hole.x - (HOLE_WIDTH * HOLE_MARGIN) && x <= hole.x + (HOLE_WIDTH * HOLE_MARGIN) 
+					&& y >= hole.y - (HOLE_HEIGHT * HOLE_MARGIN) && y <= hole.y + (HOLE_HEIGHT * HOLE_MARGIN)) {
+			ret = false; // overlaps
+		} 
+		return ret; // break if overlap
+	});
+	return ret;
 }
 
 function animate(){
-        if(is_paused == 0 ){
-          for(j=0;j< holes.length;j++){ 
-	         add_blackhole(holes[j]);
-          }
-        }
-      setTimeout(animate,50);
+    if(!paused && time > 0){
+		context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
+		
+		holes.forEach(function(hole) {
+			context.save();
+			context.translate(hole.x, hole.y);
+			context.rotate(rotate * Math.PI / 180);
+			
+			context.drawImage(hole.img, -(HOLE_WIDTH / 2), -(HOLE_HEIGHT / 2), HOLE_WIDTH, HOLE_HEIGHT);
+			context.restore();
+        });
+		
+		if (time < 10) {
+			$("#timer").fadeToggle(250);
+		}
+		
+		rotate++;
+    }
+    setTimeout(animate, 1000 / 60);
 }
 
-window.onload = setTimeout(start,1000);
+$(document).ready(function() {
+	start();
+});
 
