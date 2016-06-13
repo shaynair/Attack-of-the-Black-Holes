@@ -24,38 +24,52 @@
 		<script defer src="assets/js/game.js"></script>
 	</head>
 	<body>
+		<!-- Header section -->
+        <header>
+			<h1>Attack of the Black Holes</h1>
+			<a href="#" id="instructions-open">Instructions</a>
+			<ol id="instructions">
+				<li>Black Holes will spawn every couple seconds.</li>
+				<li>Click them to eliminate them, before they suck up the galaxy!</li>
+				<li>Can you outlast them?</li>
+			</ol>
+        </header>
+		
+		<!-- Game section -->
 		<section id="frame">
-			<div id="infobar">
-				<div id="level-sec">
-					<p>Level:<span id="level"></span></p>
-				</div>
-				<div id="score-sec">
-					<p>Score:<span id="score"></span></p> 
-				</div>
-				<div id="time-sec">
+			<div class="infobar flexbox">
+				<p>Level:<span id="level"></span></p>
+				<p>Score:<span id="score"></span></p>
+				<p>
 					<button id="pause">Pause</button>
-					<p id="timer"><span id="time"></span> Seconds</p>
-				</div>
+					<span id="timer"><span id="time"></span> Seconds</span>
+				</p>
 			</div>
 			
-			<div id="time-alert">
-				<div>   
-					<h1>Game Over</h1>
-				</div> 
-				<button id="time-finish">Finish</button>
-				<button id="time-new-game">New Game</button>
+			<div id="time-alert" class="alert">
+				<h1>Game Over</h1>
+				<button id="finish">Finish</button>
+				<button id="new-game">New Game</button>
 			</div>
 	   
-			<div id="pause-alert">
-				<div>   
-					<h1>Game Is Paused</h1>
-				</div> 
-				<button id="resume">Resume The Game</button>
+			<div id="pause-alert" class="alert">
+				<h1>Paused</h1>
+				<button id="resume">Resume</button>
 			</div> 
 	   
-			<canvas id="game" width="1000px" height="640px">
+			<canvas id="game">
+				Sorry, this activity is not supported by your browser!
 			</canvas> 
-	  </section>
+		</section> <!-- #frame -->
 	 
+		<!-- Footer section -->
+        <footer>
+			<!-- Copyright information -->
+			<p><a href="readme.pdf">&copy; Akshay Nair, Seyed Hossein Fazeli</a></p>
+			
+			<p>Made for the <a href="http://www.cdf.toronto.edu/~csc309h/summer">CSC309, Summer 2016</a> course. </p>
+			
+			<p>Sources used: <a href="https://jquery.com">jQuery</a></p>
+        </footer>
 	</body>
 </html>
