@@ -33,11 +33,7 @@ let paused;
 let score;
 let level;
 let ticks = 0;
-
-// Local Storage
 let numScores = 0;
-let maxScore = 0;
-
 
 // Animations
 let timerControl;
@@ -49,8 +45,6 @@ let animateControl;
 		1. 10 objects should randomly assort themselves (CANVAS)
 			spacecraft, planets, asteroids, nebulae, stars, 
 			moons, space junk, UFO, rockets, satellites
-		2. Should move, bounces upon hitting the edge
-		3. Should get eaten by black holes		
 */
 
 // Function to be called only once
@@ -201,7 +195,7 @@ function reset() {
 
 // Resets the current game and starts a new one.
 function restart(firstTime = false){
-	if (!firstTime && score > START_SCORE) {
+	if (!firstTime && score > 0) {
 		storeScore(score);
 	}
 	
@@ -310,7 +304,7 @@ function createObject() {
 	} while (getOverlap(x, y) !== null); // check if overlaps with some black hole's event horizon
 		
 	let moment = Math.random() * 360; // degrees of angular momentum per second
-	let velocity = Math.random() * (GAME_WIDTH + GAME_HEIGHT) / (OBJ_WIDTH + OBJ_HEIGHT); // units of movement per second
+	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 2 - 10)) + 10; // units of movement per second
 	let angle = Math.random() * 2 * Math.PI; // direction of movement
 	
 	objects.push(new SpaceJunk(x, y, moment, velocity, angle));
@@ -480,6 +474,10 @@ class BlackHole extends SpaceObject {
 }
 
 class SpaceJunk extends SpaceObject {
+	innerDraw (context) {
+		context.fillRect(-(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
+		context.stroke();
+	}
 }
 
 
