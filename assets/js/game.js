@@ -8,8 +8,8 @@ const HOLE_MARGIN_WIDTH = 50; // Event Horizon half width
 const HOLE_MARGIN_HEIGHT = 50; // Event Horizon half height
 const HOLE_CLICK_WIDTH = 25; // Click Horizon width
 const HOLE_CLICK_HEIGHT = 25; // Click Horizon height
-const HOLE_AREA_WIDTH = 1; // Point of No Return width
-const HOLE_AREA_HEIGHT = 1; // Point of No Return height
+const HOLE_AREA_WIDTH = 0.5; // Point of No Return half width
+const HOLE_AREA_HEIGHT = 0.5; // Point of No Return half height
 const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					{name: "purple", capacity: 2, points: 10, chance: 1/10},
 					{name: "blue", capacity: 3, points: 5, chance: 1/5}];
@@ -209,7 +209,7 @@ function restart(firstTime = false){
 	updateLevel(0);
 
 	getScores();
-	fadeInBox($("#start-page"), firstTime ? 100 : 400);
+	fadeInBox($("#start-page"), firstTime ? 0 : 400);
 }
 
 function updateLevel(l) {
