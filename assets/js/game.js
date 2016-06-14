@@ -8,8 +8,8 @@ const HOLE_MARGIN_WIDTH = 50; // Event Horizon half width
 const HOLE_MARGIN_HEIGHT = 50; // Event Horizon half height
 const HOLE_CLICK_WIDTH = 25; // Click Horizon width
 const HOLE_CLICK_HEIGHT = 25; // Click Horizon height
-const HOLE_AREA_WIDTH = 5; // Point of No Return width
-const HOLE_AREA_HEIGHT = 5; // Point of No Return height
+const HOLE_AREA_WIDTH = 1; // Point of No Return width
+const HOLE_AREA_HEIGHT = 1; // Point of No Return height
 const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					{name: "purple", capacity: 2, points: 10, chance: 1/10},
 					{name: "blue", capacity: 3, points: 5, chance: 1/5}];
@@ -27,7 +27,7 @@ const MAX_SCORE_DISPLAY = 3;
 const objects = [];
 const $canvas = $("#game");
 const canvas = $canvas[0]; // convert jQuery object to DOM
-const context = canvas.getContext("2d");
+const ctx = canvas.getContext("2d");
 let time;
 let paused;
 let score;
@@ -301,14 +301,9 @@ function setTimer() {
 
 // Creates a new object (non-black hole) at a random location
 function createObject() {
-	let x;
-	let y;
-	   
-	do {
-		x = Math.random() * (GAME_WIDTH - OBJ_WIDTH) + OBJ_WIDTH;
-		y = Math.random() * (GAME_HEIGHT - OBJ_HEIGHT) + OBJ_HEIGHT;
-	} while (getOverlap(x, y) !== null); // check if overlaps with some black hole's event horizon
-		
+	let x = Math.random() * (GAME_WIDTH - OBJ_WIDTH) + OBJ_WIDTH;
+	let y = Math.random() * (GAME_HEIGHT - OBJ_HEIGHT) + OBJ_HEIGHT;
+
 	let moment = Math.random() * 360; // degrees of angular momentum per second
 	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 2 - 10)) + 10; // units of movement per second
 	let angle = Math.random() * 2 * Math.PI; // direction of movement
@@ -343,10 +338,10 @@ function getOverlap(x, y, marginX = HOLE_MARGIN_WIDTH * 2, marginY = HOLE_MARGIN
 
 function animate(){
     if(isRunning()) {
-		context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
+		ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
 		
 		objects.forEach((obj, index) => {
-			obj.draw(context);
+			obj.draw(ctx);
 			
 			if (!obj.alive && obj.opacity <= 0) {
 				// Dead and faded out, remove it from the array
@@ -400,20 +395,20 @@ class SpaceObject {
 	}
 	
 	// To be overridden
-	innerDraw (context) { }
+	innerDraw (ctx) { }
 	
-	draw (context) {
-		context.save();
-		context.globalAlpha = this.opacity;
-		context.translate(this.x, this.y);
+	draw (ctx) {
+		ctx.save();
+		ctx.globalAlpha = this.opacity;
+		ctx.translate(this.x, this.y);
 		
 		// Angular Momentum
-		context.rotate(this.rotate * Math.PI / 180);
+		ctx.rotate(this.rotate * Math.PI / 180);
 		this.rotate = (this.rotate + (this.moment / FPS)) % 360;
 		
-		this.innerDraw(context);
+		this.innerDraw(ctx);
 		
-		context.restore();
+		ctx.restore();
 		if (this.alive) {
 			this.move();
 		}
@@ -481,15 +476,23 @@ class BlackHole extends SpaceObject {
 	
 	isBlackHole() { return true; }
 	
-	innerDraw (context) {
-		context.drawImage(this.img, -(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
+	innerDraw (ctx) {
+		ctx.drawImage(this.img, -(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
+		
+		// Draw inner circle (white)
+		ctx.fillStyle = "#ffffff";
+		ctx.strokeStyle = "#ffffff";
+		ctx.beginPath();
+		ctx.arc(0,0,5,0,2*Math.PI);
+		ctx.fill();
+		ctx.closePath();
 	}
 }
 
 class SpaceJunk extends SpaceObject {
-	innerDraw (context) {
-		context.fillRect(-(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
-		context.stroke();
+	innerDraw (ctx) {
+		ctx.fillRect(-(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
+		ctx.stroke();
 	}
 }
 
