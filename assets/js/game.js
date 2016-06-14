@@ -16,7 +16,7 @@ const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					// name = svg file name, chance = chance of spawning per second
 const GAME_WIDTH = $("#game").width();
 const GAME_HEIGHT = $("#game").height();		
-const START_TIME = 10; //TEST
+const START_TIME = 60;
 const SCORE_LOSS = 50;
 const START_SCORE = 200;
 const MAX_LEVEL = 2;
@@ -65,13 +65,16 @@ function initialize() {
 	});
 	  
 	$("#pause").on("click", () => {
+		if (!isRunning()) {
+			return;
+		}
 		pause();
 		// --------------------------TODO---------------------------------
 		// Play a sound here.
 	});
 																	
 	$("#resume").on("click", () => {
-	   unpause();
+		unpause();
 		// --------------------------TODO---------------------------------
 		// Play a sound here.
 	});
@@ -106,6 +109,7 @@ function initialize() {
 		if (!isRunning()) {
 			return;
 		}
+		// Find where they clicked
 		let x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft - $canvas.offset().left;
 		let y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop - $canvas.offset().top;
 		
@@ -123,7 +127,7 @@ function initialize() {
 	restart(true);
 }
 
-
+// Loads scores from localStorage and displays it on the start screen.
 function getScores() {
 	let stored = localStorage.getItem("0"); // Number of scores
 	let scoresList = [];
@@ -146,13 +150,14 @@ function getScores() {
     }  
 }
 
-
+// Stores a score into localStorage
 function storeScore(num){
 	numScores++;
 	localStorage.setItem(numScores.toString(),num.toString());
 	localStorage.setItem("0",numScores.toString());
 }
 
+// If gameplay is on
 function isRunning() {
 	return !paused && time > 0 && score > 0;
 }
@@ -222,6 +227,7 @@ function updateScore(s) {
 	$("#score").html(score);
 }
 
+// Displays a change in score
 function addScore(s) {
 	updateScore(score + s);
 	
@@ -323,7 +329,7 @@ function createHole(type) {
 	objects.push(new BlackHole(x, y, type));
 }
 
-// Checks if this (x,y) overlaps with some rectangle.
+// Checks if this (x,y) overlaps with some rectangle around some black hole.
 function getOverlap(x, y, marginX = HOLE_MARGIN_WIDTH * 2, marginY = HOLE_MARGIN_HEIGHT * 2) {
 	var ret = null;
 	objects.every((hole) => {
@@ -343,6 +349,7 @@ function animate(){
 			obj.draw(context);
 			
 			if (!obj.alive && obj.opacity <= 0) {
+				// Dead and faded out, remove it from the array
 				objects.splice(index, 1);
 			} else if (!obj.isBlackHole()) {
 				if (obj.attractor !== null && !obj.attractor.alive) {
@@ -400,6 +407,7 @@ class SpaceObject {
 		context.globalAlpha = this.opacity;
 		context.translate(this.x, this.y);
 		
+		// Angular Momentum
 		context.rotate(this.rotate * Math.PI / 180);
 		this.rotate = (this.rotate + (this.moment / FPS)) % 360;
 		
@@ -407,50 +415,55 @@ class SpaceObject {
 		
 		context.restore();
 		if (this.alive) {
-			if (this.attractor !== null) {
-				// Go towards the black hole
-				let dist = Math.sqrt(Math.pow(this.x - this.attractor.x, 2) + Math.pow(this.y - this.attractor.y, 2));
-				this.x += ((this.attractor.x - this.x) / dist);
-				this.y += ((this.attractor.y - this.y) / dist);
-				if (this.attractor.intersects(this.x, this.y, HOLE_AREA_WIDTH, HOLE_AREA_HEIGHT)) { 
-					// Absorbed
-					this.alive = false;
-					
-					this.attractor.filled++;
-					if (this.attractor.filled >= this.attractor.type.capacity) {
-						this.attractor.alive = false; // Full
-					}
-					this.attractor = null;
-					addScore(-SCORE_LOSS);
-				}
-			} else if (this.velocity !== 0) {
-				this.x += (this.velocity / FPS) * Math.cos(this.angle);
-				this.y += (this.velocity / FPS) * Math.sin(this.angle);
-				
-				if (this.x <= (OBJ_WIDTH / 2)) {
-					this.x = (OBJ_WIDTH / 2);
-					// Hits left side; change angle to right
-					this.angle = Math.PI - this.angle;
-				} else if (this.x >= GAME_WIDTH - (OBJ_WIDTH / 2)) {
-					this.x = GAME_WIDTH - (OBJ_WIDTH / 2);
-					// Hits right side; change angle to left
-					this.angle = Math.PI - this.angle;
-				}
-				if (this.y <= (OBJ_HEIGHT / 2)) {
-					this.y = (OBJ_HEIGHT / 2);
-					// Hits top side; change angle to down
-					this.angle = 2 * Math.PI - this.angle;
-				} else if (this.y >= GAME_HEIGHT - (OBJ_HEIGHT / 2)) {
-					this.y = GAME_HEIGHT - (OBJ_HEIGHT / 2);
-					// Hits bottom side; change angle to up
-					this.angle = 2 * Math.PI - this.angle;
-				}
-			}
+			this.move();
 		}
 		if (this.alive && this.opacity < 1) {
 			this.opacity += (2 / FPS); // Fade In 0.5 sec
 		} else if (!this.alive && this.opacity > 0) {
 			this.opacity -= (2 / FPS); // Fade Out 0.5 sec
+		}
+	}
+	
+	move () {
+		if (this.attractor !== null) {
+			// Go towards the black hole
+			let dist = Math.sqrt(Math.pow(this.x - this.attractor.x, 2) + Math.pow(this.y - this.attractor.y, 2));
+			this.x += ((this.attractor.x - this.x) / dist);
+			this.y += ((this.attractor.y - this.y) / dist);
+			if (this.attractor.intersects(this.x, this.y, HOLE_AREA_WIDTH, HOLE_AREA_HEIGHT)) { 
+				// Absorbed
+				this.alive = false;
+					
+				this.attractor.filled++;
+				if (this.attractor.filled >= this.attractor.type.capacity) {
+					this.attractor.alive = false; // Full
+				}
+				this.attractor = null;
+				addScore(-SCORE_LOSS);
+			}
+		} else if (this.velocity !== 0) {
+			// Movement
+			this.x += (this.velocity / FPS) * Math.cos(this.angle);
+			this.y += (this.velocity / FPS) * Math.sin(this.angle);
+			
+			if (this.x <= (OBJ_WIDTH / 2)) {
+				this.x = (OBJ_WIDTH / 2);
+				// Hits left side; change angle to right
+				this.angle = Math.PI - this.angle;
+			} else if (this.x >= GAME_WIDTH - (OBJ_WIDTH / 2)) {
+				this.x = GAME_WIDTH - (OBJ_WIDTH / 2);
+				// Hits right side; change angle to left
+				this.angle = Math.PI - this.angle;
+			}
+			if (this.y <= (OBJ_HEIGHT / 2)) {
+				this.y = (OBJ_HEIGHT / 2);
+				// Hits top side; change angle to down
+				this.angle = 2 * Math.PI - this.angle;
+			} else if (this.y >= GAME_HEIGHT - (OBJ_HEIGHT / 2)) {
+				this.y = GAME_HEIGHT - (OBJ_HEIGHT / 2);
+				// Hits bottom side; change angle to up
+				this.angle = 2 * Math.PI - this.angle;
+			}
 		}
 	}
 }
@@ -481,7 +494,5 @@ class SpaceJunk extends SpaceObject {
 }
 
 
-$(document).ready(() => {
-	initialize();
-});
+$(document).ready(initialize);
 
