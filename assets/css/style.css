@@ -69,10 +69,10 @@ img, object, embed, canvas {
 
 /* Buttons */
 button {
-	font-size: 1.25em;
 	border-radius: 5px; 
 	border: 2px solid purple;
 	color: purple;
+	text-transform: uppercase;
 	transition: 0.2s color, 0.2s background; /* see hover */
 }
 
@@ -83,6 +83,7 @@ button:hover{
 }
 
 .alert button {
+	font-size: 1.25em;
 	width: 80%;
 	margin: 1em 10%;
 	padding: 1em 1em;
@@ -90,6 +91,7 @@ button:hover{
 
 .infobar button {
 	margin: 0 auto;
+	padding: 0.3em 1.5em;
 }
 
 /* Alerts */
