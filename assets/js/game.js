@@ -16,11 +16,12 @@ const HOLE_TYPE = [{name: "black", capacity: 1, points: 20, chance: 1/20},
 					// name = svg file name, chance = chance of spawning per second
 const GAME_WIDTH = $("#game").width();
 const GAME_HEIGHT = $("#game").height();		
-const START_TIME = 60;
+const START_TIME = 10; //TEST
 const SCORE_LOSS = 50;
 const START_SCORE = 200;
-const MAX_LEVELS = 2;
+const MAX_LEVEL = 2;
 const NUM_OBJECTS = 10;
+const MAX_SCORE_DISPLAY = 3;
 
 // Game Data
 const objects = [];
@@ -33,19 +34,17 @@ let score;
 let level;
 let ticks = 0;
 
+// Local Storage
+let numScores = 0;
+let maxScore = 0;
+
+
 // Animations
-let timer_control;
-let animate_control;
+let timerControl;
+let animateControl;
 
 
 /* TODO:
-	- Start Screen:
-		1. High scores should be saved and displayed (HTML5 Local Storage)
-			(Title, High Score, Start button)
-	
-	- Levels:
-		1. When time runs out, display a transitional screen
-
 	- Objects:
 		1. 10 objects should randomly assort themselves (CANVAS)
 			spacecraft, planets, asteroids, nebulae, stars, 
@@ -60,9 +59,12 @@ function initialize() {
 	canvas.setAttribute('width', '' + GAME_WIDTH);
 	canvas.setAttribute('height', '' + GAME_HEIGHT);
 	
+	// HACK: we don't want to dynamically resize, so change to flex first
+	$(".alert-full").css("display", "flex").fadeOut(0);
+	
 	// Set all click events only once.
 	$("#new-game").on("click", () => {
-		$("#gameover-alert").fadeOut(300);
+	    $("#gameover").fadeOut();
 		restart();
 		// --------------------------TODO---------------------------------
 		// Play a sound here.
@@ -75,7 +77,28 @@ function initialize() {
 	});
 																	
 	$("#resume").on("click", () => {
-		unpause();
+	   unpause();
+		// --------------------------TODO---------------------------------
+		// Play a sound here.
+	});
+	
+	$("#start").on("click", () => {
+	    $("#start-page").fadeOut();
+		start();
+		// --------------------------TODO---------------------------------
+		// Play a sound here.
+	});
+	
+	$("#next").on("click", () => {
+	   $("#change-level").fadeOut();
+	   start();
+		// --------------------------TODO---------------------------------
+		// Play a sound here.
+	});
+
+	$("#finish").on("click", () => {
+	   $("#finish-level").fadeOut();
+	   restart();
 		// --------------------------TODO---------------------------------
 		// Play a sound here.
 	});
@@ -102,7 +125,38 @@ function initialize() {
 		}
 	});
 	
-	start();
+	// show the start page. 
+	restart(true);
+}
+
+
+function getScores() {
+	let stored = localStorage.getItem("0"); // Number of scores
+	let scoresList = [];
+	let $scores = $("#high-scores").empty();
+	if (stored === null || parseInt(stored) <= 0){
+		$scores.append($('<li/>').html("0"));
+	} else {
+		numScores = parseInt(stored);
+		for (let i = 1; i <= numScores; i++){
+			scoresList.push(parseInt(localStorage.getItem(i.toString())));
+		}
+
+		// Sort in Descending order
+		scoresList.sort((a,b) => { return b-a; });
+	  
+	    // Get only the first elements and display them
+		scoresList.slice(0, Math.min(MAX_SCORE_DISPLAY, numScores)).forEach((score) => {
+			$scores.append($('<li/>').html(score));
+		});
+    }  
+}
+
+
+function storeScore(num){
+	numScores++;
+	localStorage.setItem(numScores.toString(),num.toString());
+	localStorage.setItem("0",numScores.toString());
 }
 
 function isRunning() {
@@ -111,20 +165,20 @@ function isRunning() {
 
 function pause() {
 	paused = true;
-	$("#pause-alert").fadeIn(300);
+	$("#pause-alert").fadeIn();
 }
 
 function unpause() {
 	paused = false;
-	$("#pause-alert").fadeOut(300);
+	$("#pause-alert").fadeOut();
 }
 
 // Function to be called whenever we start the game.
 function start() {
-	unpause();
-	updateScore(START_SCORE);
+	reset();
+
 	updateTime(START_TIME);
-	updateLevel(1);
+	updateLevel(level + 1);
 	
 	for (let i = 0; i < NUM_OBJECTS; i++) {
 		createObject();
@@ -134,6 +188,30 @@ function start() {
 	animate();
 }
 
+// Resets game data
+function reset() {
+	objects.splice(0, objects.length);
+	clearTimeout(timerControl);
+	clearTimeout(animateControl);
+	unpause();
+	
+	updateTime(0);
+	
+}
+
+// Resets the current game and starts a new one.
+function restart(firstTime = false){
+	if (!firstTime && score > START_SCORE) {
+		storeScore(score);
+	}
+	
+	reset();
+	updateScore(START_SCORE);
+	updateLevel(0);
+
+	getScores();
+	fadeInBox($("#start-page"), firstTime ? 100 : 400);
+}
 
 function updateLevel(l) {
 	level = l;
@@ -159,7 +237,7 @@ function addScore(s) {
 	
 	if (score <= 0) {
 		unpause();
-		$("#gameover-alert").fadeIn(300);
+		$("#gameover").fadeIn();
 	}
 }
 
@@ -187,19 +265,25 @@ function fadeInline($object, inTime, outTime, inFirst = true) {
 	}
 }
 
-// Resets the current game and starts a new one.
-function restart(){
-	objects.splice(0, objects.length);
-	clearTimeout(timer_control);
-	clearTimeout(animate_control);
-	
-	start();
+// Ensures flexbox design
+function fadeInBox($object, inTime = 300) {
+	$object.fadeIn(inTime, () => {
+		$object.css("display", "flex");
+	});
 }
 
 // Executes every second. Creates new black holes.
 function showTime() {
-	if (time <= 0 && score > 0 && !paused) {
-		// TODO make new level
+    if (time <= 0 && score > 0 && !paused) {
+		// Level finished
+		if (level < MAX_LEVEL) {
+			$("#current-score").html(score);
+			$("#new-level").html(level + 1);
+			fadeInBox($("#change-level"));
+		} else {
+			$("#final-score").html(score);
+			fadeInBox($("#finish-level"));
+		}
 	} else if (isRunning()) {
 		updateTime(time - 1);
 		HOLE_TYPE.forEach((type) => {
@@ -212,7 +296,7 @@ function showTime() {
 }
 
 function setTimer() {
-	timer_control = setTimeout(showTime, 1000);
+	timerControl = setTimeout(showTime, 1000);
 }
 
 // Creates a new object (non-black hole) at a random location
@@ -246,10 +330,10 @@ function createHole(type) {
 }
 
 // Checks if this (x,y) overlaps with some rectangle.
-function getOverlap(x, y, margin_x = HOLE_MARGIN_WIDTH * 2, margin_y = HOLE_MARGIN_HEIGHT * 2) {
+function getOverlap(x, y, marginX = HOLE_MARGIN_WIDTH * 2, marginY = HOLE_MARGIN_HEIGHT * 2) {
 	var ret = null;
 	objects.every((hole) => {
-		if (hole.isBlackHole() && hole.alive && hole.intersects(x, y, margin_x, margin_y)) {
+		if (hole.isBlackHole() && hole.alive && hole.intersects(x, y, marginX, marginY)) {
 			ret = hole; // overlaps; we return the hole that overlapped
 		} 
 		return ret === null; // break if overlap
@@ -284,9 +368,13 @@ function animate(){
 		if (time < 10 && (ticks % (FPS / 3)) == 0) {
 			fadeInline($("#timer"), 160, 160, false);
 		}
+		// Flicker score when low
+		if (score < 50 && (ticks % (FPS / 3)) == 0) {
+			fadeInline($("#scorer"), 160, 160, false);
+		}
     }
 	ticks++;
-    animate_control = setTimeout(animate, 1000 / FPS);
+    animateControl = setTimeout(animate, 1000 / FPS);
 }
 
 //-------------------------------------------------------------------------------
@@ -305,9 +393,9 @@ class SpaceObject {
 	
 	isBlackHole() { return false; }
 	
-	intersects(x, y, margin_x, margin_y) {
-		return x >= this.x - margin_x 
-				&& x <= this.x + margin_x && y >= this.y - margin_y && y <= this.y + margin_y;
+	intersects(x, y, marginX, marginY) {
+		return x >= this.x - marginX 
+				&& x <= this.x + marginX && y >= this.y - marginY && y <= this.y + marginY;
 	}
 	
 	// To be overridden
