@@ -127,19 +127,24 @@ button:hover{
 	justify-content: space-between;
 }
 
-.alert h1 {
+.alert h2 {
 	font-size: 2.5em;
 	color: red;
 }
 
-.alert h2 {
+.alert h3 {
 	font-size: 2.25em;
 	color: purple;
 }
 
-.alert h3 {
+.alert h4, .alert h5, .alert ul {
 	font-size: 1.75em;
 }
+
+.alert h5 {
+	margin-bottom: 0;
+}
+
 
 /* Header
 ---------------------------------------*/

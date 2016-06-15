@@ -42,7 +42,9 @@ let animateControl;
 /* TODO:
 	- Objects:
 		1. 10 objects should randomly assort themselves (CANVAS)
-			planets, asteroids, nebulae, stars, moons, space junk, UFO
+			planets, asteroids, nebulae, space junk
+			
+			moon, star, UFO
 */
 
 // Function to be called only once

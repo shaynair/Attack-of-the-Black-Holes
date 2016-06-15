@@ -15,12 +15,8 @@
 		
 		<!-- Assets, CSS, JS -->
         <link rel="stylesheet" href="assets/css/style.css" />
-		<!--[if lt IE 9]>
-			 <script defer src="assets/scripts/jquery-1.12.4.min.js"></script>
-		<![endif]-->
-		<!--[if gte IE 9]><!-->
-			 <script defer src="assets/scripts/jquery-2.2.4.min.js"></script>
-		<!--<![endif]-->
+		<!-- <script defer src="assets/scripts/jquery-1.12.4.min.js"></script> -->
+		<script defer src="assets/scripts/jquery-2.2.4.min.js"></script>
 		<script defer src="assets/scripts/game.js"></script>
 	</head>
 	<body>
@@ -47,37 +43,35 @@
 			</section>
 			
 			<section id="gameover" class="alert alert-box">
-				<h1>Game Over</h1>
+				<h2>Game Over</h2>
 				<button id="new-game">New Game</button>
 			</section> <!-- #gameover -->
 	   
 			<section id="pause-alert" class="alert alert-box">
-				<h1>Paused</h1>
+				<h3>Paused</h3>
 				<button id="resume">Resume</button>
 			</section> <!-- #pause-alert -->
 			
 			<section id="start-page" class="alert alert-full">
-				<h1>Attack of the Black Holes</h1>
-				<h3>
-					High Scores:
-					<ul id="high-scores"></ul> 
-				</h3>
+				<h2>Attack of the Black Holes</h2>
+				<h5>High Scores:</h5>
+				<ul id="high-scores"></ul> 
 				<button id="start">Start</button>
 			</section> <!-- #start-page -->
 			
 			<section id="change-level" class="alert alert-full">
-				<h2>Level <span id="new-level"></span></h2> 
-				<h3>
+				<h3>Level <span id="new-level"></span></h3> 
+				<h4>
 					Score: <span id="current-score"></span>
-				</h3>
+				</h4>
 				<button id="next">Next</button>
 			</section> <!-- #change-level -->
 			
 			<section id="finish-level" class="alert alert-full">
 				<h2>Congratulations!</h2> 
-				<h3>
+				<h4>
 					Final Score: <span id="final-score"></span> 
-				</h3>
+				</h4>
 				<button id="finish">Finish</button>
 			</section> <!-- #finish-level -->
 	   
@@ -94,6 +88,7 @@
 			<p>Made for the <a href="http://www.cdf.toronto.edu/~csc309h/summer">CSC309, Summer 2016</a> course. </p>
 			
 			<p>Sources used: <a href="https://jquery.com">jQuery</a></p>
+			<p>Icons from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a>, licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></p>
         </footer>
 	</body>
 </html>
