@@ -24,7 +24,8 @@ const NUM_OBJECTS = 10;
 const MAX_SCORE_DISPLAY = 3;
 
 // Game Data
-const objects = [];
+let objects = [];
+let holes = [];
 const $canvas = $("#game");
 const canvas = $canvas[0]; // convert jQuery object to DOM
 const ctx = canvas.getContext("2d");
@@ -159,7 +160,7 @@ function storeScore(num){
 
 // If gameplay is on
 function isRunning() {
-	return !paused && time > 0 && score > 0;
+	return !paused && time > 0 && objects.length > 0;
 }
 
 function pause() {
@@ -190,6 +191,7 @@ function start() {
 // Resets game data
 function reset() {
 	objects.splice(0, objects.length);
+	holes.splice(0, holes.length);
 	clearTimeout(timerControl);
 	clearTimeout(animateControl);
 	unpause();
@@ -200,7 +202,7 @@ function reset() {
 
 // Resets the current game and starts a new one.
 function restart(firstTime = false){
-	if (!firstTime && score > 0) {
+	if (!firstTime) {
 		storeScore(score);
 	}
 	
@@ -223,7 +225,7 @@ function updateTime(t) {
 }
 
 function updateScore(s) {
-	score = Math.max(0, s);
+	score = s;
 	$("#score").html(score);
 }
 
@@ -234,11 +236,6 @@ function addScore(s) {
 	let $change = $("#score-change");
 	$change.text((s > 0 ? "+" : "") + s);
 	fadeInline($change, 100, 1000);
-	
-	if (score <= 0) {
-		unpause();
-		$("#gameover").fadeIn();
-	}
 }
 
 // Keeps an inline object in space calculations for fading.
@@ -274,7 +271,7 @@ function fadeInBox($object, inTime = 300) {
 
 // Executes every second. Creates new black holes.
 function showTime() {
-    if (time <= 0 && score > 0 && !paused) {
+    if (time <= 0 && objects.length > 0 && !paused) {
 		// Level finished
 		if (level < MAX_LEVEL) {
 			$("#current-score").html(score);
@@ -321,14 +318,14 @@ function createHole(type) {
 		y = Math.random() * (GAME_HEIGHT - (2 * HOLE_MARGIN_HEIGHT)) + HOLE_MARGIN_HEIGHT;
 	} while (getOverlap(x, y) !== null); // check if overlaps with some black hole's event horizon
 		
-	objects.push(new BlackHole(x, y, type));
+	holes.push(new BlackHole(x, y, type));
 }
 
 // Checks if this (x,y) overlaps with some rectangle around some black hole.
 function getOverlap(x, y, marginX = HOLE_MARGIN_WIDTH * 2, marginY = HOLE_MARGIN_HEIGHT * 2) {
 	var ret = null;
-	objects.every((hole) => {
-		if (hole.isBlackHole() && hole.alive && hole.intersects(x, y, marginX, marginY)) {
+	holes.every((hole) => {
+		if (hole.alive && hole.intersects(x, y, marginX, marginY)) {
 			ret = hole; // overlaps; we return the hole that overlapped
 		} 
 		return ret === null; // break if overlap
@@ -340,24 +337,26 @@ function animate(){
     if(isRunning()) {
 		ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT); 
 		
-		objects.forEach((obj, index) => {
+		objects = objects.filter((obj) => {
 			obj.draw(ctx);
 			
-			if (!obj.alive && obj.opacity <= 0) {
-				// Dead and faded out, remove it from the array
-				objects.splice(index, 1);
-			} else if (!obj.isBlackHole()) {
-				if (obj.attractor !== null && !obj.attractor.alive) {
-					obj.attractor = null;
-				}
-				// Find and set an attractive black hole
-				if (obj.attractor === null) {
-					let hole = getOverlap(obj.x, obj.y); // n^2...
-					if (hole !== null) {
-						obj.attractor = hole;
-					}
+			if (obj.attractor !== null && (!obj.alive || !obj.attractor.alive)) {
+				obj.attractor = null;
+			}
+			// Find and set an attractive black hole
+			if (obj.alive && obj.attractor === null) {
+				let hole = getOverlap(obj.x, obj.y); // n^2...
+				if (hole !== null) {
+					obj.attractor = hole;
 				}
 			}
+			return obj.alive || obj.opacity > 0;
+        });
+		holes = holes.filter((obj) => {
+			obj.draw(ctx);
+			
+			return obj.alive || obj.opacity > 0;
+			// Dead and faded out, remove it from the array
         });
 		
 		// Flicker time when low
@@ -365,8 +364,13 @@ function animate(){
 			fadeInline($("#timer"), 160, 160, false);
 		}
 		// Flicker score when low
-		if (score < 50 && (ticks % (FPS / 3)) == 0) {
+		if (score <= 0 && (ticks % (FPS / 3)) == 0) {
 			fadeInline($("#scorer"), 160, 160, false);
+		}
+		// Game Over
+		if (objects.length <= 0) {
+			unpause();
+			$("#gameover").fadeIn();
 		}
     }
 	ticks++;
@@ -386,8 +390,6 @@ class SpaceObject {
 		this.rotate = 0;
 		this.attractor = null; // black hole that we are attracted to
 	}
-	
-	isBlackHole() { return false; }
 	
 	intersects(x, y, marginX, marginY) {
 		return x >= this.x - marginX 
@@ -473,8 +475,6 @@ class BlackHole extends SpaceObject {
 		this.img = new Image();
 		this.img.src = 'assets/images/' + type.name + '-hole.svg'; 
 	}
-	
-	isBlackHole() { return true; }
 	
 	innerDraw (ctx) {
 		ctx.drawImage(this.img, -(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
