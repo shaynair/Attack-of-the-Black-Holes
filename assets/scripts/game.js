@@ -305,7 +305,19 @@ function createObject() {
 	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 2 - 10)) + 10; // units of movement per second
 	let angle = Math.random() * 2 * Math.PI; // direction of movement
 	
-	objects.push(new SpaceJunk(x, y, moment, velocity, angle));
+	let type = Math.floor(Math.random() * 2);
+	let obj;
+	// random class
+	switch(type) {
+		case 0:
+			obj = new Satellite(x, y, moment, velocity, angle);
+			break;
+		case 1:
+			obj = new SpaceRocket(x, y, moment, velocity, angle);
+			break;
+	}
+	
+	objects.push(obj);
 }
 
 // Creates a new black hole at a random location
@@ -492,10 +504,94 @@ class BlackHole extends SpaceObject {
 class SpaceJunk extends SpaceObject {
 	innerDraw (ctx) {
 		ctx.fillRect(-(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
-		ctx.stroke();
 	}
 }
 
+
+class SpaceRocket extends SpaceObject {
+
+  innerDraw(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(-7,10);
+    ctx.lineTo(-15,24);
+    ctx.lineTo(+15,24);
+    ctx.lineTo(+7,10);
+    ctx.lineTo(-7,10);
+    ctx.closePath();
+	
+    let grd = ctx.createLinearGradient(0,0,0,140);
+    grd.addColorStop(0.5,"yellow");
+    grd.addColorStop(0.75,"orange");
+    grd.addColorStop(1,"white");
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(0,-25);
+    ctx.bezierCurveTo(-7,-8,-7,0,-7,5);
+    ctx.lineTo(-14,15);
+    ctx.lineTo(-5,10);
+    ctx.lineTo(0,15);
+    ctx.lineTo(5,10);
+    ctx.lineTo(14,15);
+    ctx.lineTo(7,5);
+    ctx.bezierCurveTo(7,0,7,-8,0,-25);
+    ctx.closePath();
+    ctx.fillStyle = "black";
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+class Satellite extends SpaceObject {
+
+  innerDraw(ctx) {
+    ctx.beginPath();
+    ctx.fillStyle ="black";
+    ctx.fillRect(-2,-12,4,4);
+    ctx.fillRect(-3,-8,6,16);
+    ctx.moveTo(0,-12);
+    ctx.lineTo(0,-14);
+    ctx.moveTo(-5,-1);
+    ctx.lineTo(5,-1);
+    ctx.closePath();
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.fillStyle ="blue";
+    ctx.rect(5,-6,20,10);
+    ctx.rect(-25,-6,20,10);
+    ctx.moveTo(5,-1);
+    ctx.lineTo(25,-1);
+    ctx.moveTo(-25,-1);
+    ctx.lineTo(-5,-1);
+    ctx.moveTo(12,-6);
+    ctx.lineTo(12,4);
+    ctx.moveTo(19,-6);
+    ctx.lineTo(19,4);
+    ctx.moveTo(-19,-6);
+    ctx.lineTo(-19,4);
+    ctx.moveTo(-12,-6);
+    ctx.lineTo(-12,4);
+    ctx.closePath();
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.moveTo(-6,-16);
+    ctx.lineTo(6,-16);
+    
+    ctx.moveTo(-4,-19);
+    ctx.lineTo(4,-19);
+  
+    ctx.moveTo(-2,-22);
+    ctx.lineTo(2,-22);
+  
+    ctx.closePath();
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+  }
+}
 
 $(document).ready(initialize);
 
