@@ -35,8 +35,6 @@ let score;
 let level;
 let ticks = 0;
 let numScores = 0;
-
-// Animations
 let timerControl;
 let animateControl;
 
@@ -44,8 +42,7 @@ let animateControl;
 /* TODO:
 	- Objects:
 		1. 10 objects should randomly assort themselves (CANVAS)
-			spacecraft, planets, asteroids, nebulae, stars, 
-			moons, space junk, UFO, rockets, satellites
+			planets, asteroids, nebulae, stars, moons, space junk, UFO
 */
 
 // Function to be called only once
@@ -61,8 +58,6 @@ function initialize() {
 	$("#new-game").on("click", () => {
 	    $("#gameover").fadeOut();
 		restart();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
 	});
 	  
 	$("#pause").on("click", () => {
@@ -70,35 +65,23 @@ function initialize() {
 			return;
 		}
 		pause();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
 	});
 																	
-	$("#resume").on("click", () => {
-		unpause();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
-	});
+	$("#resume").on("click", unpause);
 	
 	$("#start").on("click", () => {
 	    $("#start-page").fadeOut();
 		start();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
 	});
 	
 	$("#next").on("click", () => {
-	   $("#change-level").fadeOut();
-	   start();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
+		$("#change-level").fadeOut();
+		start();
 	});
 
 	$("#finish").on("click", () => {
 	   $("#finish-level").fadeOut();
 	   restart();
-		// --------------------------TODO---------------------------------
-		// Play a sound here.
 	});
 	
 	$("#instructions-open").on("click", () => {
@@ -119,8 +102,6 @@ function initialize() {
 			// Remove the hole and give points
 			hole.alive = false;
 			addScore(hole.type.points);
-			// --------------------------TODO---------------------------------
-			// Play a sound here.
 		}
 	});
 	
@@ -235,7 +216,7 @@ function addScore(s) {
 	
 	let $change = $("#score-change");
 	$change.text((s > 0 ? "+" : "") + s);
-	fadeInline($change, 100, 1000);
+	fadeInline($change, 100, 2000);
 }
 
 // Keeps an inline object in space calculations for fading.
@@ -302,7 +283,7 @@ function createObject() {
 	let y = Math.random() * (GAME_HEIGHT - OBJ_HEIGHT) + OBJ_HEIGHT;
 
 	let moment = Math.random() * 360; // degrees of angular momentum per second
-	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 2 - 10)) + 10; // units of movement per second
+	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 5 - 10)) + 10; // units of movement per second
 	let angle = Math.random() * 2 * Math.PI; // direction of movement
 	
 	let type = Math.floor(Math.random() * 2);
