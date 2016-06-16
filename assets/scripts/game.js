@@ -38,15 +38,6 @@ let numScores = 0;
 let timerControl;
 let animateControl;
 
-
-/* TODO:
-	- Objects:
-		1. 10 objects should randomly assort themselves (CANVAS)
-			planets, asteroids, nebulae, space junk
-			
-			moon, star, UFO
-*/
-
 // Function to be called only once
 function initialize() {
 	// Since we style the canvas using CSS, this is necessary to scale the canvas
@@ -58,6 +49,9 @@ function initialize() {
 	
 	// Set all click events only once.
 	$("#new-game").on("click", () => {
+		if (isRunning()) {
+			return;
+		}
 	    $("#gameover").fadeOut();
 		restart();
 	});
@@ -72,18 +66,27 @@ function initialize() {
 	$("#resume").on("click", unpause);
 	
 	$("#start").on("click", () => {
+		if (isRunning()) {
+			return;
+		}
 	    $("#start-page").fadeOut();
 		start();
 	});
 	
 	$("#next").on("click", () => {
+		if (isRunning()) {
+			return;
+		}
 		$("#change-level").fadeOut();
 		start();
 	});
 
 	$("#finish").on("click", () => {
-	   $("#finish-level").fadeOut();
-	   restart();
+		if (isRunning()) {
+			return;
+		}
+		$("#finish-level").fadeOut();
+		restart();
 	});
 	
 	$("#instructions-open").on("click", () => {
@@ -288,7 +291,7 @@ function createObject() {
 	let velocity = (Math.random() * ((GAME_WIDTH + GAME_HEIGHT) / 5 - 10)) + 10; // units of movement per second
 	let angle = Math.random() * 2 * Math.PI; // direction of movement
 	
-	let type = Math.floor(Math.random() * 2);
+	let type = Math.floor(Math.random() * 10);
 	let obj;
 	// random class
 	switch(type) {
@@ -298,8 +301,31 @@ function createObject() {
 		case 1:
 			obj = new SpaceRocket(x, y, moment, velocity, angle);
 			break;
+		case 2:
+			obj = new SpecialRocket(x, y, moment, velocity, angle);
+			break;
+		case 3:
+			obj = new SpaceShip(x, y, moment, velocity, angle);
+			break;
+		case 4:
+			obj = new Moon(x, y, moment, velocity, angle);
+			break;
+		case 5:
+			obj = new Star(x, y, moment, velocity, angle);
+			break;
+		case 6:
+			obj = new Sun(x, y, moment, velocity, angle);
+			break;
+		case 7:
+			obj = new Supernova(x, y, moment, velocity, angle);
+			break;
+		case 8:
+			obj = new Earth(x, y, moment, velocity, angle);
+			break;
+		case 9:
+			obj = new Comet(x, y, moment, velocity, angle);
+			break;
 	}
-	
 	objects.push(obj);
 }
 
@@ -398,6 +424,7 @@ class SpaceObject {
 		ctx.save();
 		ctx.globalAlpha = this.opacity;
 		ctx.translate(this.x, this.y);
+		ctx.scale(OBJ_WIDTH / 50, OBJ_HEIGHT / 50);
 		
 		// Angular Momentum
 		ctx.rotate(this.rotate * Math.PI / 180);
@@ -415,6 +442,27 @@ class SpaceObject {
 			this.opacity -= (2 / FPS); // Fade Out 0.5 sec
 		}
 	}
+	
+	// Draws a star with spikes, with spikes pointing to the outer, and with inner circle
+	drawStar(spikes, outer, inner, stroke, fill, width, initialAngle = 3/2) {
+		let angle = Math.PI * initialAngle;
+		ctx.strokeStyle = stroke;
+		ctx.lineWidth = width;
+		ctx.fillStyle = fill;
+		
+		ctx.beginPath();
+		ctx.moveTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+		for (let i = 0; i < spikes; i++) {
+			angle += Math.PI / spikes;
+			ctx.lineTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+			
+			angle += Math.PI / spikes;
+			ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+		}
+		ctx.closePath();
+		ctx.stroke();
+		ctx.fill();
+    }
 	
 	move () {
 		if (this.attractor !== null) {
@@ -484,45 +532,70 @@ class BlackHole extends SpaceObject {
 	}
 }
 
-class SpaceJunk extends SpaceObject {
-	innerDraw (ctx) {
-		ctx.fillRect(-(OBJ_WIDTH / 2), -(OBJ_HEIGHT / 2), OBJ_WIDTH, OBJ_HEIGHT);
-	}
-}
 
-
-class SpaceRocket extends SpaceObject {
+class SpecialRocket extends SpaceObject {
 
   innerDraw(ctx) {
     ctx.beginPath();
-    ctx.moveTo(-7,10);
-    ctx.lineTo(-15,24);
-    ctx.lineTo(+15,24);
-    ctx.lineTo(+7,10);
-    ctx.lineTo(-7,10);
+    ctx.moveTo(0,-25); 
+    ctx.lineTo(-3,-18); 
+    ctx.lineTo(3,-18); 
+    ctx.lineTo(0,-25); 
     ctx.closePath();
-	
-    let grd = ctx.createLinearGradient(0,0,0,140);
-    grd.addColorStop(0.5,"yellow");
-    grd.addColorStop(0.75,"orange");
-    grd.addColorStop(1,"white");
-    ctx.fillStyle = grd;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(0,-25);
-    ctx.bezierCurveTo(-7,-8,-7,0,-7,5);
-    ctx.lineTo(-14,15);
-    ctx.lineTo(-5,10);
-    ctx.lineTo(0,15);
-    ctx.lineTo(5,10);
-    ctx.lineTo(14,15);
-    ctx.lineTo(7,5);
-    ctx.bezierCurveTo(7,0,7,-8,0,-25);
-    ctx.closePath();
-    ctx.fillStyle = "black";
+    ctx.fillStyle="black";
     ctx.fill();
     ctx.stroke();
+  
+  
+    ctx.beginPath();
+    ctx.moveTo(-3,-18); 
+    ctx.lineTo(-12,-5); 
+    ctx.lineTo(12,-5); 
+    ctx.lineTo(3,-18);
+    ctx.lineTo(3,-18);   
+    ctx.closePath();
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.arc(0,-11,3,0,2*Math.PI);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-12,-5); 
+    ctx.lineTo(-15,0); 
+    ctx.lineTo(15,0); 
+    ctx.lineTo(12,-5); 
+    ctx.closePath();
+    ctx.fillStyle="black";
+    ctx.fill();
+  
+    ctx.stroke();  
+  
+    ctx.beginPath();
+    ctx.moveTo(-6,0); 
+    ctx.bezierCurveTo(-12,5,-12,15,0,25);
+    ctx.bezierCurveTo(12,15,12,5,6,0);
+    ctx.closePath();
+    ctx.fillStyle="#ff471a";
+    ctx.fill();
+  
+    
+    ctx.beginPath();
+    ctx.moveTo(-4,0); 
+    ctx.bezierCurveTo(-8,4,-8,12,0,20);
+    ctx.bezierCurveTo(8,12,8,4,4,0);
+    ctx.closePath();
+    ctx.fillStyle="#ff9900";
+    ctx.fill();
+  
+    ctx.beginPath();
+    ctx.moveTo(-2,0); 
+    ctx.bezierCurveTo(-4,2,-4,10,0,15);
+    ctx.bezierCurveTo(4,15,4,2,2,0);
+    ctx.closePath();
+    ctx.fillStyle="#e6e600";
+    ctx.fill();
   }
 }
 
@@ -557,7 +630,7 @@ class Satellite extends SpaceObject {
     ctx.moveTo(-12,-6);
     ctx.lineTo(-12,4);
     ctx.closePath();
-    ctx.strokeStyle = "blue";
+    ctx.strokeStyle ="blue";
     ctx.stroke();
   
     ctx.beginPath();
@@ -571,9 +644,254 @@ class Satellite extends SpaceObject {
     ctx.lineTo(2,-22);
   
     ctx.closePath();
-    ctx.strokeStyle = "red";
+    ctx.strokeStyle ="red";
     ctx.stroke();
   }
+}
+
+class SpaceRocket extends SpaceObject {
+
+ innerDraw(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(-7,10);
+  ctx.lineTo(-15,24);
+  ctx.lineTo(15,24);
+  ctx.lineTo(7,10);
+  ctx.lineTo(-7,10);
+  ctx.closePath();
+  let grd = ctx.createLinearGradient(0,0,0,140);
+  grd.addColorStop(0.5,"yellow");
+  grd.addColorStop(0.75,"orange");
+  grd.addColorStop(1,"white");
+  ctx.fillStyle = grd;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(0,-25);
+  ctx.bezierCurveTo(-7,-8,-7,0,-7,5);
+  ctx.lineTo(-14,15);
+  ctx.lineTo(-5,10);
+  ctx.lineTo(0,15);
+  ctx.lineTo(5,10);
+  ctx.lineTo(14,15);
+  ctx.lineTo(7,5);
+  ctx.bezierCurveTo(7,0,7,-8,0,-25);
+  ctx.closePath();
+  ctx.fillStyle = "black";
+  ctx.fill();
+  ctx.stroke();
+ }
+}
+
+
+class SpaceShip extends SpaceObject {
+
+ innerDraw(ctx) {
+	ctx.beginPath();
+    ctx.arc(0,-5,10,Math.PI,0);
+    ctx.closePath();
+    ctx.fillStyle = "#8080ff";
+    ctx.fill();
+    ctx.stroke();
+   
+    ctx.beginPath();
+    ctx.moveTo(-10,-5);
+    ctx.lineTo(-12,0);
+    ctx.lineTo(12,0);
+    ctx.lineTo(10,-5);
+    ctx.closePath();
+    ctx.fillStyle = "#66ff33";
+    ctx.fill();
+    ctx.stroke();
+  
+  
+    ctx.beginPath();
+    ctx.moveTo(-12,0);
+    ctx.lineTo(-25,10);
+    ctx.lineTo(25,10);
+    ctx.lineTo(12,0);
+    ctx.closePath();
+    ctx.fillStyle = "black";
+    ctx.fill();
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.moveTo(-25,10);
+    ctx.lineTo(-20,15);
+    ctx.lineTo(20,15);
+    ctx.lineTo(25,10);
+    ctx.closePath();
+    ctx.fillStyle = "#66ff33";
+    ctx.fill();
+    ctx.stroke();
+  
+    ctx.beginPath();
+    ctx.fillStyle = "yellow";
+    ctx.arc(-10,5,3,0,2*Math.PI);
+    ctx.arc(0,5,3,0,2*Math.PI);
+    ctx.arc(10,5,3,0,2*Math.PI);
+    ctx.closePath();
+    ctx.fill();  
+  
+    ctx.beginPath();
+    ctx.moveTo(-20,15);
+    ctx.lineTo(-25,24);
+    ctx.moveTo(20,15);
+    ctx.lineTo(25,24);
+    ctx.moveTo(0,-15);
+    ctx.lineTo(0,-25);
+    ctx.moveTo(0,-15);
+    ctx.lineTo(-5,-22);
+    ctx.moveTo(0,-15);
+    ctx.lineTo(5,-22);
+    ctx.closePath();
+    ctx.stroke();
+ }
+}
+
+class Comet extends SpaceObject {
+	innerDraw(ctx) {
+		ctx.fillStyle = 'beige';
+		ctx.beginPath();
+		ctx.arc(15,15,10,0,2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.fill();
+		
+		let grd = ctx.createLinearGradient(15,15,-25,-25);
+		grd.addColorStop(0,"yellow");
+		grd.addColorStop(0.5,"orange");
+		grd.addColorStop(1,"red");
+		ctx.fillStyle = grd;
+		ctx.strokeStyle = "black";
+		ctx.lineWidth = 1;
+		
+		ctx.beginPath();
+		ctx.moveTo(15 + Math.cos(Math.PI * (3/4)) * 10, 15 + Math.sin(Math.PI * (3/4)) * 10);
+		ctx.lineTo(-25,-25);
+		ctx.lineTo(15 + Math.cos(Math.PI * (7/4)) * 10, 15 + Math.sin(Math.PI * (7/4)) * 10);
+		ctx.closePath();
+		ctx.fill();
+	}
+}
+
+class Earth extends SpaceObject {
+	innerDraw(ctx) {
+		ctx.strokeStyle = 'deepskyblue';
+		ctx.fillStyle = 'lightgreen';
+		ctx.lineWidth = 5;
+		ctx.lineJoin = "round";
+		
+		ctx.beginPath();
+		ctx.arc(0,0,25,0,2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.fill();
+		
+		
+		
+		ctx.beginPath();
+		ctx.moveTo(0,-25);
+		ctx.lineTo(0,25);
+		ctx.closePath();
+		ctx.stroke();
+		
+		ctx.beginPath();
+		ctx.moveTo(0, 25);
+		ctx.quadraticCurveTo(35,0,0,-25);
+		ctx.closePath();
+		ctx.stroke();
+		
+		ctx.beginPath();
+		ctx.moveTo(0, 25);
+		ctx.quadraticCurveTo(-35,0,0,-25);
+		ctx.closePath();
+		ctx.stroke();
+		
+		// Horizontal lines
+		[0, -1/6, 1/6].forEach((angle) => {
+			ctx.beginPath();
+			ctx.moveTo(Math.cos(Math.PI * angle) * 25,Math.sin(Math.PI * angle) * 25);
+			ctx.lineTo(Math.cos(Math.PI * angle) * -25,Math.sin(Math.PI * angle) * 25);
+			ctx.closePath();
+			ctx.stroke();
+		});
+	}
+}
+
+class Supernova extends SpaceObject {
+	innerDraw(ctx) {
+		let grd = ctx.createRadialGradient(0, 0, 1, 0, 0, 15);
+		grd.addColorStop(0,"black");
+		grd.addColorStop(0.15,"red");
+		grd.addColorStop(0.3,"orangered");
+		grd.addColorStop(0.45,"lightyellow");
+		grd.addColorStop(0.6,"lightgreen");
+		grd.addColorStop(0.75,"lightblue");
+		grd.addColorStop(0.9,"purple");
+		grd.addColorStop(1,"white");
+		
+		this.drawStar(2, 25, 5, 'black', 'white', 1);
+		this.drawStar(8, 15, 5, 'white', grd, 1);
+	}
+}
+
+class Sun extends SpaceObject {
+	innerDraw(ctx) {
+		this.drawStar(15, 25, 20, 'red', 'orange', 3);
+		
+		ctx.fillStyle = 'yellow';
+		ctx.strokeStyle = 'orange';
+		
+		ctx.beginPath();
+		ctx.arc(0,0,20,0,2*Math.PI);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
+}
+
+class Star extends SpaceObject {
+	innerDraw(ctx) {
+		//this.drawStar(10, 25, 2.5, 'skyblue', 'white', 7/4);
+		let grd = ctx.createRadialGradient(0, 0, 10, 0, 0, 25);
+		grd.addColorStop(0,"skyblue");
+		grd.addColorStop(1,"white");
+		
+		this.drawStar(12, 25, 2.5, grd, grd, 3); // Blue Dwarf
+	}
+}
+
+class Moon extends SpaceObject {
+	innerDraw(ctx) {
+		ctx.lineCap = 'butt';
+		ctx.lineJoin = 'miter';
+		ctx.miterLimit = 4;
+		ctx.fillStyle = "#bdc3c7";
+		ctx.strokeStyle = "black";
+		
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.arc(0,0,20,0,2 * Math.PI,true);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+
+		ctx.fillStyle = "white";
+		ctx.strokeStyle = "black";
+		ctx.beginPath();
+		ctx.arc(7.5,0,15,0,2 * Math.PI,true);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+
+		ctx.strokeStyle = "white";
+		ctx.beginPath();
+		ctx.arc(15,0,10,0,2 * Math.PI,true);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
 }
 
 $(document).ready(initialize);
