@@ -435,7 +435,7 @@ class SpaceObject {
 		
 		// Angular Momentum
 		ctx.rotate(this.rotate * Math.PI / 180);
-		this.rotate = (this.rotate + ((10 * diff) / this.moment)) % 360;
+		this.rotate = (this.rotate + ((diff / 1000) * this.moment)) % 360;
 		
 		this.innerDraw(ctx);
 		
@@ -490,8 +490,8 @@ class SpaceObject {
 			}
 		} else if (this.velocity !== 0) {
 			// Movement
-			this.x += ((10 * diff) / this.velocity) * Math.cos(this.angle);
-			this.y += ((10 * diff) / this.velocity) * Math.sin(this.angle);
+			this.x += ((diff / 1000) * this.velocity) * Math.cos(this.angle);
+			this.y += ((diff / 1000) * this.velocity) * Math.sin(this.angle);
 			
 			if (this.x <= (OBJ_WIDTH / 2)) {
 				this.x = (OBJ_WIDTH / 2);
