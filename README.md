@@ -2,12 +2,6 @@
 
 A canvas game in HTML5 and ES6.
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [How to start](#how-to-start)
-- [Contributing](#contributing)
-
 ## How to start
 
 Simply run `a2.html` in your favourite browser.
